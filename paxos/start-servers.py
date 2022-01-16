@@ -4,6 +4,8 @@ import os.path
 import subprocess
 import sys
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from core import Config
 
 def main(raw_config: dict, config_path: str):

@@ -3,8 +3,8 @@ from dataclasses import dataclass, asdict
 
 from flask.json import dumps, loads
 
-from ..message import *
-from ..core import *
+from message import *
+from core import *
 
 @dataclass
 class A(Message):

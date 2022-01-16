@@ -2,9 +2,13 @@ import argparse
 import dataclasses
 import json
 import logging
+import os.path
+import sys
 
 from flask import Flask, jsonify, request
 from flask.logging import default_handler
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from core import *
 from message import *
