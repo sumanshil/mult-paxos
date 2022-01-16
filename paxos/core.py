@@ -84,9 +84,9 @@ class Proposer(Agent):
         self._propose_url = propose_url
         self._accept_url = accept_url
         # "pBal" in Chand.
-        self._ballot_number: BallotNumber = 0
+        self._ballot_number: Ballot = 0
         # Clients waiting for a response.
-        self._futures[dict[BallotNumber, Future[Message]]] = {}
+        self._futures[dict[Ballot, Future[Message]]] = {}
         #the replicated state machine (RSM) is just an appendable list of ints
         self._state: list[int] = []
 
@@ -133,7 +133,7 @@ class Proposer(Agent):
 
 
 # Fig. 4 of Chand, auxiliary operators.
-def max_sv(vs: Sequence[VotedSet]) -> set[SV]:
+def max_sv(vs: Sequence[VotedSet]) -> set[SlotValue]:
     """(slot, val) with highest-ballot-numbered value for each slot.
 
     Incoming vs is a list of dicts, which map slot to highest balloted PVlalue,
@@ -142,7 +142,7 @@ def max_sv(vs: Sequence[VotedSet]) -> set[SV]:
 
     See test_max_sv().
     """
-    slot_to_ballot_value: dict[SlotNumber, tuple[BallotNumber, Value]] = {}
+    slot_to_ballot_value: dict[Slot, tuple[Ballot, Value]] = {}
     for v in vs:
         for slot, pvalue in v.items():
             assert pvalue[1] == slot
@@ -158,7 +158,7 @@ class Acceptor(Agent):
     def __init__(self, config: Config, port: int):
         super().__init__(config, port)
         # Highest ballot seen. "aBal" in Chand.
-        self._ballot_number: BallotNumber = -1
+        self._ballot_number: Ballot = -1
         # Highest ballot voted for per slot. "aVoted" in Chand. Grows foreve
         self._voted: VotedSet = {}
 

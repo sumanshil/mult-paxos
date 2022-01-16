@@ -33,10 +33,11 @@ class MessageTest(unittest.TestCase):
              B(A(1))),
             ('{"bs": [{"a": {"value": 1}}, {"a": {"value": 2}}]}',
              C([B(A(1)), B(A(2))])),
-            ('{"ballot": 2, "from_port":5000}',
+            ('{"ballot": 2, "from_port": 5000}',
              Prepare(5000, 2)),
-            ('{"ballot": 2, "from_port": 5000, "voted": {"1": [1, 3, 4]}}',
-             Promise(5000, 2, {1: (1, 3, 4)}))
+            ('{"ballot": 2, "from_port": 5000, "voted": {"1": '
+             '{"ballot": 1, "slot": 3, "value": 4}}}',
+             Promise(5000, 2, {1: PValue(1, 3, 4)}))
         ]:
             with self.subTest(str(obj)):
                 self.assertEqual(obj.__class__.from_dict(loads(jsn)), obj)
