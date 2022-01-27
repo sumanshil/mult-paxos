@@ -17,7 +17,8 @@ __all__ = [
     "Prepare",
     "Promise",
     "Accept",
-    "Accepted"
+    "Accepted",
+    "OK",
 ]
 
 Ballot: TypeAlias = int
@@ -25,7 +26,7 @@ Slot: TypeAlias = int
 Value: TypeAlias = int
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class JSONish:
     """Base class. Interoperates with JSON-ish dicts."""
 
@@ -96,7 +97,7 @@ class PValue(JSONish):
 VotedSet: TypeAlias = dict[Slot, PValue]
 """Tracks how Acceptors have voted."""
 
-
+@dataclass(unsafe_hash=True)
 class Message(JSONish):
     """Base class for Paxos protocol requests and replies."""
     pass
@@ -150,6 +151,11 @@ class Accept(Message):
 
 
 @dataclass(unsafe_hash=True)
-class Accepted(Message):
+class Accepted(Accept):
     """Phase 2b message."""
 
+
+@dataclass(unsafe_hash=True)
+class OK(Message):
+    """Acknowledge a message."""
+    pass
