@@ -105,7 +105,9 @@ class Proposer(Agent):
         #the replicated state machine (RSM) is just an appendable list of ints
         self._state: list[int] = []
 
-    def _handle_client_request(self, client_request: ClientRequest, future: Future[Message]) -> None:
+    def _handle_client_request(self,
+                               client_request: ClientRequest,
+                               future: Future[Message]) -> None:
         # Phase 1a, Fig. 2 of Chand.
         self._requests_unserviced.appendleft(client_request)
         self._futures[client_request.get_value()] = future
@@ -113,8 +115,11 @@ class Proposer(Agent):
         prepare = Prepare(self._port, self._ballot_number)
         self.send_to_all(self._propose_url, prepare)
 
-    def _handle_promise(self, promise: Promise):
+    def _handle_promise(self,
+                        promise: Promise,
+                        future: Future[Message]):
         # Phase 2a, Fig. 4 of Chand.
+        future.set_result(OK())
         self._promises[promise.ballot].append(promise)
         promises = self._promises[promise.ballot]
         if len(promises) <= len(self._config.nodes) // 2:
@@ -129,14 +134,17 @@ class Proposer(Agent):
         new_slot = max((sv.slot for sv in slot_values), default=0) + 1
         while self._requests_unserviced:
             cr = self._requests_unserviced.pop()
-            slot_values.add(SlotValue(new_slot, cr.new_value))
+            slot_values.add(SlotValue(new_slot, cr.get_value()))
             new_slot += 1
 
         accept = Accept(self._port, self._ballot_number, list(slot_values))
         self._send_to_all(self._accept_url, accept)
 
-    def _handle_accepted(self, accepted: Accepted):
+    def _handle_accepted(self,
+                         accepted: Accepted,
+                         future: Future[Message]):
         # This is a Learner procedure, and Chand doesn't cover Learners.
+        future.set_result(OK())
         self._accepteds[accepted.ballot].append(accepted)
         accepted = self._accepteds[accepted.ballot]
         if len(accepted) <= len(self._config.nodes)//2:
@@ -165,7 +173,8 @@ class Proposer(Agent):
 
     def apply(self, value: Value):
         self._state.append(value)
-        self._futures.pop(value).set_result(ClientReply(self._state))
+        if value in self._futures:
+            self._futures.pop(value).set_result(ClientReply(self._state))
 
     def _main_loop(self, q: queue.Queue[Agent._QEntry]) -> None:
         while True:
@@ -173,15 +182,11 @@ class Proposer(Agent):
             if isinstance(entry.message, ClientRequest):
                 self._handle_client_request(entry.message, entry.reply_future)
             elif isinstance(entry.message, Promise):
-                self._handle_promise(entry.message)
+                self._handle_promise(entry.message, entry.reply_future)
             elif isinstance(entry.message, Accepted):
-                self._handle_accepted(entry.message)
+                self._handle_accepted(entry.message, entry.reply_future)
             else:
                 assert False, f"Unexpected {entry.message}"
-
-    def _min_undecided_slot(self):
-        return min(
-            (s for s, v in self._decisions.items() if v is None), default=1)
 
     def _perform(self, new_value: int):
         """Actually """
