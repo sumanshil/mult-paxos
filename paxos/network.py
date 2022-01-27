@@ -8,7 +8,7 @@ def send(node: str, url: str, raw_message: dict) -> dict | None:
     try:
         response = requests.post(f"http://{node}{url}",
                                  json=raw_message,
-                                 timeout=1000)
+                                 timeout=10)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as exc:

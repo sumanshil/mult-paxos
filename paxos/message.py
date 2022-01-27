@@ -12,6 +12,7 @@ __all__ = [
     "PValue",
     "VotedSet",
     "Message",
+    "Value",
     "ClientRequest",
     "ClientReply",
     "Prepare",
@@ -77,6 +78,14 @@ class JSONish:
             for f in dataclasses.fields(cls)
         })
 
+
+@dataclass(unsafe_hash=True)
+class Value(JSONish):
+    client_id: int
+    command_id: int
+    payload: int
+
+
 @dataclass
 class SlotValue(JSONish):
     """A (slot number, value) pair, called "SV" in Chand."""
@@ -104,8 +113,10 @@ class Message(JSONish):
 
 
 @dataclass(unsafe_hash=True)
-class ClientRequest(Message):
-    new_value: Value
+class ClientRequest(Message, Value):
+    def get_value(self) -> Value:
+        # In case a client request ever has more than a value.
+        return Value(**dataclasses.asdict(self))
 
 
 def is_reconfig(message: Message) -> bool:
